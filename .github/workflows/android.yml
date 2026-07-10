@@ -17,4 +17,5 @@ jobs:
       - uses: android-actions/setup-android@v3
       - run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
       - uses: gradle/actions/wrapper-validation@v4
+      - run: chmod +x gradlew
       - run: ./gradlew testDebugUnitTest lintDebug assembleDebug
