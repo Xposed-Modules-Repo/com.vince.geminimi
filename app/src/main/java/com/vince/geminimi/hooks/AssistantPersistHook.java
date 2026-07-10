@@ -5,6 +5,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.provider.Settings;
 
 import com.vince.geminimi.Constants;
@@ -100,7 +101,7 @@ public final class AssistantPersistHook {
             IntentFilter filter = new IntentFilter();
             filter.addAction(Intent.ACTION_USER_UNLOCKED);
             filter.addAction(Intent.ACTION_BOOT_COMPLETED);
-            context.registerReceiver(new BroadcastReceiver() {
+            BroadcastReceiver receiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context receiverContext, Intent intent) {
                     if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
@@ -119,7 +120,12 @@ public final class AssistantPersistHook {
                                 + " settings write failed: " + t);
                     }
                 }
-            }, filter);
+            };
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
+            } else {
+                context.registerReceiver(receiver, filter);
+            }
             sUserReceiverRegistered = true;
         } catch (Throwable t) {
             XposedBridge.log(Constants.TAG + " user receiver registration failed: " + t);

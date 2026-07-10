@@ -41,17 +41,7 @@ public final class PowerKeyOverlayHook {
         // 都不一样。统一用名字模式扫描：含 XiaoAi / Assist / Voice / AiKey 的全接管。
         int hooked = 0;
         for (java.lang.reflect.Method m : pwm.getDeclaredMethods()) {
-            String n = m.getName();
-            boolean match =
-                    n.contains("XiaoAi")
-                 || n.contains("xiaoAi")
-                 || n.contains("AiKey")
-                 || n.equals("launchAssistAction")
-                 || n.equals("launchAssistantAction")
-                 || n.equals("launchVoiceAssist")
-                  || n.equals("launchVoiceAssistant")          // HyperOS 实际名字
-                  || n.equals("launchVoiceAssistWithWakeLock");
-            if (!match || !canIntercept(m)) continue;
+            if (!HookPolicy.shouldHookPowerMethod(m)) continue;
             hookOne(pwm, m);
             hooked++;
         }
@@ -77,12 +67,6 @@ public final class PowerKeyOverlayHook {
         });
         XposedBridge.log(Constants.TAG + " hooked " + clazz.getSimpleName()
                 + "#" + m.getName() + " " + m);
-    }
-
-    private static boolean canIntercept(java.lang.reflect.Method m) {
-        if (java.lang.reflect.Modifier.isStatic(m.getModifiers())) return false;
-        Class<?> rt = m.getReturnType();
-        return rt == Void.TYPE || rt == Boolean.TYPE || rt == Integer.TYPE;
     }
 
     private static Object interceptResult(java.lang.reflect.Method m) {
