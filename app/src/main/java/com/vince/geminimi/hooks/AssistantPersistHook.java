@@ -31,6 +31,7 @@ public final class AssistantPersistHook {
     private AssistantPersistHook() {}
     private static boolean sUserReceiverRegistered;
     private static volatile boolean sBlockBootRewrite = true;
+    private static final String EXTRA_USER_HANDLE = "android.intent.extra.user_handle";
 
     public static void applySystemServer(XC_LoadPackage.LoadPackageParam lpp) {
         try {
@@ -110,10 +111,13 @@ public final class AssistantPersistHook {
                                 + " boot rewrite guard disabled after boot completed");
                         return;
                     }
-                    int userId = intent.getIntExtra(Intent.EXTRA_USER_HANDLE, 0);
+                    int userId = intent.getIntExtra(EXTRA_USER_HANDLE, 0);
                     try {
-                        Context userContext = receiverContext.createContextAsUser(
-                                android.os.UserHandle.of(userId), 0);
+                        android.os.UserHandle userHandle = (android.os.UserHandle)
+                                XposedHelpers.callStaticMethod(android.os.UserHandle.class,
+                                        "of", userId);
+                        Context userContext = (Context) XposedHelpers.callMethod(
+                                receiverContext, "createContextAsUser", userHandle, 0);
                         writeAll(userContext);
                     } catch (Throwable t) {
                         XposedBridge.log(Constants.TAG + " user " + userId
